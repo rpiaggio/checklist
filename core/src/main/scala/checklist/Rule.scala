@@ -1,7 +1,7 @@
 package checklist
 
-import cats.{Applicative, Id, Monoid, Traverse}
-import cats.data.Ior
+import cats.{Applicative, Id, Monad, Monoid, Traverse}
+import cats.data.{Ior, IorT}
 import cats.implicits._
 import monocle.PLens
 
@@ -50,12 +50,35 @@ sealed abstract class Rule[A, B, F[_] : Applicative] {
   def contramapPath[C, D: PathPrefix](path: D)(func: C => A): Rule[C, B, F] =
     contramap(func).mapEachMessage(_.prefix(path))
 
-  //  We need flatMap on F! SHould we require ev <:< FlatMap[F] ?
-  //  def flatMap[C](func: B => Rule[A, C, F]): Rule[A, C, F] =
-  //    Rule.pure(value => this(value) flatMap (func(_)(value)))
+  def flatMap[C](func: B => Rule[A, C, F])(implicit ev: Monad[F]): Rule[A, C, F] =
+    Rule.pure[A, C, F] { value =>
+      (for {
+        b <- IorT(this (value))
+        c <- IorT(func(b)(value))
+      } yield {
+        c
+      }).value
 
-  //  def andThen[C](that: Rule[B, C, F]): Rule[A, C, F] =
-  //    Rule.pure(value => this(value) flatMap (that.apply))
+      //      this (value).flatMap { checkedB =>
+      //        checkedB.right.map { b =>
+      //          val FCheckedC = func(b)(value)
+      //          Applicative[F].map(FCheckedC) { checkedC => checkedB flatMap { _ => checkedC } }
+      //        }.getOrElse(Applicative[F].pure(Ior.left(checkedB.left.get)))
+      //      }
+
+
+    }
+
+  def andThen[C](that: Rule[B, C, F])(implicit ev: Monad[F]): Rule[A, C, F] =
+    Rule.pure[A, C, F](value =>
+      (for {
+        b <- IorT(this (value))
+        c <- IorT(that(b))
+      } yield {
+        c
+      }).value
+    )
+
   /*
     def zip[C](that: Rule[A, C, F]): Rule[A, (B, C), F] =
       Rule.pure { a =>
@@ -123,11 +146,11 @@ trait BaseRules {
 
   //  def fromKleisli[A, B](func: Kleisli[Checked, A, B]): Rule[A, B] = pure(func.apply)
 
-  def pass[A, F[_] : Applicative]: Rule[A, A, F] =
-    apply
+  def pass[A]: Rule[A, A, Id] =
+    apply[A, Id]
 
-  def fail[A, F[_] : Applicative](messages: Messages): Rule[A, A, F] =
-    pure(in => Applicative[F].pure(Ior.both(messages, in)))
+  def fail[A](messages: Messages): Rule[A, A, Id] =
+    pure[A, A, Id](in => Ior.both(messages, in))
 }
 
 /** Rules that convert one type to another. */
@@ -375,24 +398,24 @@ trait CollectionRules {
 
   def sequence[S[_] : Traverse, A, B, F[_] : Applicative](rule: Rule[A, B, F]): Rule[S[A], S[B], F] =
     pure { values =>
-        values.zipWithIndex.traverse{ case (value, index) =>
-          rule.prefix(index).apply(value)
-        }.map(_.sequence)
+      values.zipWithIndex.traverse { case (value, index) =>
+        rule.prefix(index).apply(value)
+      }.map(_.sequence)
     }
 
-  def mapValue[A: PathPrefix, B, F[_]: Applicative](key: A): Rule[Map[A, B], B, F] =
+  def mapValue[A: PathPrefix, B, F[_] : Applicative](key: A): Rule[Map[A, B], B, F] =
     mapValue[A, B, F](key, errors(s"Value not found"))
 
-  def mapValue[A: PathPrefix, B, F[_]: Applicative](key: A, messages: Messages): Rule[Map[A, B], B, F] =
+  def mapValue[A: PathPrefix, B, F[_] : Applicative](key: A, messages: Messages): Rule[Map[A, B], B, F] =
     pure(map => Applicative[F].pure(map.get(key).map(Ior.right).getOrElse(Ior.left(messages map (_ prefix key)))))
 
-/*  def mapValues[A: PathPrefix, B, C, F[_]: Applicative](rule: Rule[B, C, F]): Rule[Map[A, B], Map[A, C], F] =
-    pure { in: Map[A, B] =>
-      in.toList.traverse {
-        case (key, value) =>
-          rule.prefix(key).apply(value).map(key -> _)
-      }
-    } map (_.toMap)*/
+  /*  def mapValues[A: PathPrefix, B, C, F[_]: Applicative](rule: Rule[B, C, F]): Rule[Map[A, B], Map[A, C], F] =
+      pure { in: Map[A, B] =>
+        in.toList.traverse {
+          case (key, value) =>
+            rule.prefix(key).apply(value).map(key -> _)
+        }
+      } map (_.toMap)*/
 }
 
 /** Type class instances for Rule */
