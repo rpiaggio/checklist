@@ -1,13 +1,11 @@
 package checklist
 
-import cats.{/*Applicative, */Id}
+import cats.{Eq, Id}
 import cats.data.{Ior, NonEmptyList}
 import cats.implicits._
 import cats.laws.discipline.arbitrary._
-//import cats.laws.discipline.eq._
+import cats.laws.discipline.eq._
 import org.scalacheck.Arbitrary
-
-//import scala.language.higherKinds
 
 package object laws extends CatsInstances with ScalacheckInstances
 
@@ -51,6 +49,6 @@ trait ScalacheckInstances {
 }
 
 trait CatsInstances {
-//  implicit def ruleEq[A: Arbitrary, B: Eq, F[_] : Applicative]: Eq[Rule[B, F, A]] =
-//    catsLawsEqForFn1[A, Checked[B]].contramap[Rule[B, F, A]](rule => rule.apply _)
+  implicit def ruleEq[A: Arbitrary, B: Eq]: Eq[Rule[Id, A, B]] =
+    catsLawsEqForFn1[A, Checked[B]].contramap[Rule[Id, A, B]](rule => rule.apply _)
 }

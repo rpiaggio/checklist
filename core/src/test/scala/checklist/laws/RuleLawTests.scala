@@ -7,6 +7,6 @@ import cats.tests.CatsSuite
 //import checklist._
 
 class RuleLawTests extends CatsSuite {
-//  checkAll("Rule[String, Id, Int]", ApplicativeTests[Rule[Int, ?, Id]](Rule.ruleApplicative[Int, Id]).applicative[String, String, String])
+//  checkAll("Rule[Id, String, Int]", ApplicativeTests[Rule[Id, Int, ?]](Rule.ruleApplicative[Id, Int]).applicative[String, String, String])
 //  checkAll("Rule[Int, String]", ProfunctorTests[Rule].profunctor[Int, Int, Int, String, String, String])
 }
