@@ -1,11 +1,13 @@
 package checklist
 
+import scala.language.higherKinds
+
 import scala.reflect.macros.blackbox
 
 class RuleMacros(val c: blackbox.Context) {
   import c.universe._
 
-  def field[A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree)(rule: c.Tree): c.Tree = {
+  def field[F[_], A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree)(rule: c.Tree)(ev: c.Tree): c.Tree = {
     val q"($param) => $rhs" = accessor
     val a = weakTypeOf[A]
     val b = weakTypeOf[B]
@@ -14,7 +16,24 @@ class RuleMacros(val c: blackbox.Context) {
     q"${c.prefix}.field($path, $lens)($rule)"
   }
 
-  def fieldWith[A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree)(builder: c.Tree): c.Tree = {
+  def fieldImplicit[F[_], A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree)(rule: c.Tree, ev: c.Tree): c.Tree = {
+    val q"($param) => $rhs" = accessor
+    val a = weakTypeOf[A]
+    val b = weakTypeOf[B]
+    val path = accessorPrefix(accessor)
+    val lens = q"""monocle.macros.GenLens[$a].apply[$b]($accessor)"""
+    q"${c.prefix}.field($path, $lens)($rule)"
+  }
+
+  def fieldWith[F[_], A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree)(builder: c.Tree)(ev: c.Tree): c.Tree = {
+    val a = weakTypeOf[A]
+    val b = weakTypeOf[B]
+    val path = accessorPrefix(accessor)
+    val lens = q"""monocle.macros.GenLens[$a].apply[$b]($accessor)"""
+    q"${c.prefix}.fieldWith($path, $lens)($builder)"
+  }
+
+  def fieldWithImplicit[F[_], A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree)(builder: c.Tree, ev: c.Tree): c.Tree = {
     val a = weakTypeOf[A]
     val b = weakTypeOf[B]
     val path = accessorPrefix(accessor)

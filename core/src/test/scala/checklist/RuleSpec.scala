@@ -341,39 +341,39 @@ class CombinatorRulesSpec extends FreeSpec with Matchers {
   "flatMap" in {
     val rule = for {
       a <- gte[Int](0, warnings("Should be >= 0"))
-      b <- if(a > 0) {
-             lt[Int](10, errors("Must be < 10"))
-           } else {
-             gt[Int](-10, errors("Must be > -10"))
-           }
+      b <- if (a > 0) {
+        lt[Int](10, errors("Must be < 10"))
+      } else {
+        gt[Int](-10, errors("Must be > -10"))
+      }
     } yield b
-    rule(  0) should be(Ior.right(0))
-    rule( 10) should be(Ior.both(errors("Must be < 10"), 10))
+    rule(0) should be(Ior.right(0))
+    rule(10) should be(Ior.both(errors("Must be < 10"), 10))
     rule(-10) should be(Ior.both(warnings("Should be >= 0") concatNel errors("Must be > -10"), -10))
   }
 
   "andThen" in {
     val rule = parseInt andThen gt(0)
     rule("abc") should be(Ior.left(errors("Must be a whole number")))
-    rule( "-1") should be(Ior.both(errors("Must be greater than 0"), -1))
-    rule(  "0") should be(Ior.both(errors("Must be greater than 0"), 0))
-    rule( "+1") should be(Ior.right(1))
+    rule("-1") should be(Ior.both(errors("Must be greater than 0"), -1))
+    rule("0") should be(Ior.both(errors("Must be greater than 0"), 0))
+    rule("+1") should be(Ior.right(1))
     rule("1.2") should be(Ior.left(errors("Must be a whole number")))
   }
 
   "zip" in {
     val rule = parseInt zip parseDouble
     rule("abc") should be(Ior.left(errors("Must be a whole number", "Must be a number")))
-    rule(  "1") should be(Ior.right((1, 1.0)))
+    rule("1") should be(Ior.right((1, 1.0)))
     rule("1.2") should be(Ior.left(errors("Must be a whole number")))
   }
 
   "prefix" in {
     val rule = parseInt andThen gt(0) prefix "num"
     rule("abc") should be(Ior.left(errors("num" -> "Must be a whole number")))
-    rule( "-1") should be(Ior.both(errors("num" -> "Must be greater than 0"), -1))
-    rule(  "0") should be(Ior.both(errors("num" -> "Must be greater than 0"), 0))
-    rule( "+1") should be(Ior.right(1))
+    rule("-1") should be(Ior.both(errors("num" -> "Must be greater than 0"), -1))
+    rule("0") should be(Ior.both(errors("num" -> "Must be greater than 0"), 0))
+    rule("+1") should be(Ior.right(1))
     rule("1.2") should be(Ior.left(errors("num" -> "Must be a whole number")))
   }
 
@@ -381,7 +381,7 @@ class CombinatorRulesSpec extends FreeSpec with Matchers {
     val l = monocle.Lens[(Int, Int), Int](p => p._1)(n => p => (n, p._2))
     val r = monocle.Lens[(Int, Int), Int](p => p._2)(n => p => (p._1, n))
     val rule = (lt(0) composeLens l) andThen (gt(0) composeLens r)
-    rule(( 0,  0)) should be(Ior.both(errors("Must be less than 0", "Must be greater than 0"), (0, 0)))
+    rule((0, 0)) should be(Ior.both(errors("Must be less than 0", "Must be greater than 0"), (0, 0)))
     rule((+1, +1)) should be(Ior.both(errors("Must be less than 0"), (1, 1)))
     rule((-1, -1)) should be(Ior.both(errors("Must be greater than 0"), (-1, -1)))
     rule((+1, -1)) should be(Ior.both(errors("Must be less than 0", "Must be greater than 0"), (1, -1)))
@@ -392,7 +392,7 @@ class CombinatorRulesSpec extends FreeSpec with Matchers {
     val l = monocle.Lens[(Int, Int), Int](p => p._1)(n => p => (n, p._2))
     val r = monocle.Lens[(Int, Int), Int](p => p._2)(n => p => (p._1, n))
     val rule = lt(0).at("l", l) andThen gt(0).at("r", r)
-    rule(( 0,  0)) should be(Ior.both(errors("l" -> "Must be less than 0", "r" -> "Must be greater than 0"), (0, 0)))
+    rule((0, 0)) should be(Ior.both(errors("l" -> "Must be less than 0", "r" -> "Must be greater than 0"), (0, 0)))
     rule((+1, +1)) should be(Ior.both(errors("l" -> "Must be less than 0"), (1, 1)))
     rule((-1, -1)) should be(Ior.both(errors("r" -> "Must be greater than 0"), (-1, -1)))
     rule((+1, -1)) should be(Ior.both(errors("l" -> "Must be less than 0", "r" -> "Must be greater than 0"), (1, -1)))
@@ -436,9 +436,9 @@ class CatsRuleSpec extends FreeSpec with Matchers {
   def getField(name: String): Rule[Id, Map[String, String], String] =
     pure[Id, Map[String, String], String](_.get(name).map(Ior.right).getOrElse(Ior.left(errors(s"Field not found: ${name}"))))
 
-    val parseAddress =
-      (getField("house") andThen parseInt andThen gt(0), getField("street") andThen nonEmpty)
-        .mapN(Address.apply)
+  val parseAddress =
+    (getField("house") andThen parseInt andThen gt(0), getField("street") andThen nonEmpty)
+      .mapN(Address.apply)
 
   def runTests(f: Map[String, String] => Checked[Address]) = {
     "good data" in {
@@ -485,7 +485,7 @@ class Rule1SyntaxSpec extends FreeSpec with Matchers {
 
   "field macro" in {
     val rule = Rule[Id, Coord]
-    //      .field(_.x)(gt(0, errors("fail")))
+      .field(_.x)(gt(0, errors("fail")))
     rule(Coord(1, 0)) should be(Ior.right(Coord(1, 0)))
     rule(Coord(0, 0)) should be(Ior.both(errors(("x" :: PNil) -> "fail"), Coord(0, 0)))
     rule(Coord(0, 1)) should be(Ior.both(errors(("x" :: PNil) -> "fail"), Coord(0, 1)))
@@ -494,14 +494,14 @@ class Rule1SyntaxSpec extends FreeSpec with Matchers {
 
   "field macro with multi-level accessor" in {
     val rule = Rule[Id, Foo]
-    //      .field(_.bar.baz)(gt(0, errors("fail")))
+      .field(_.bar.baz)(gt(0, errors("fail")))
     rule(Foo(Bar(1))) should be(Ior.right(Foo(Bar(1))))
     rule(Foo(Bar(0))) should be(Ior.both(errors(("bar" :: "baz" :: PNil) -> "fail"), Foo(Bar(0))))
   }
 
   "fieldWith macro" in {
     val rule = Rule[Id, Coord]
-    //      .fieldWith(_.x)(c => gte(c.y, errors("fail")))
+      .fieldWith(_.x)(c => gte(c.y, errors("fail")))
     rule(Coord(1, 0)) should be(Ior.right(Coord(1, 0)))
     rule(Coord(0, 0)) should be(Ior.right(Coord(0, 0)))
     rule(Coord(0, 1)) should be(Ior.both(errors(("x" :: PNil) -> "fail"), Coord(0, 1)))
@@ -510,7 +510,7 @@ class Rule1SyntaxSpec extends FreeSpec with Matchers {
 
   "field method" in {
     val rule = Rule[Id, Coord]
-    //      .field("z" :: PNil, Coord.x)(gt(0, errors("fail")))
+      .field("z" :: PNil, Coord.x)(gt(0, errors("fail")))
     rule(Coord(1, 0)) should be(Ior.right(Coord(1, 0)))
     rule(Coord(0, 0)) should be(Ior.both(errors(("z" :: PNil) -> "fail"), Coord(0, 0)))
     rule(Coord(0, 1)) should be(Ior.both(errors(("z" :: PNil) -> "fail"), Coord(0, 1)))
@@ -519,7 +519,7 @@ class Rule1SyntaxSpec extends FreeSpec with Matchers {
 
   "fieldWith method" in {
     val rule = Rule[Id, Coord]
-    //      .fieldWith("z" :: PNil, Coord.x)(c => gte(c.y, errors("fail")))
+      .fieldWith("z" :: PNil, Coord.x)(c => gte(c.y, errors("fail")))
     rule(Coord(1, 0)) should be(Ior.right(Coord(1, 0)))
     rule(Coord(0, 0)) should be(Ior.right(Coord(0, 0)))
     rule(Coord(0, 1)) should be(Ior.both(errors(("z" :: PNil) -> "fail"), Coord(0, 1)))
