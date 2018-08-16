@@ -7,7 +7,7 @@ import cats.data.Ior
 import checklist.{Rule, PathPrefix}
 
 trait RuleHListSyntax {
-
+/*
   implicit class RuleHList[A, B <: HList, Rev <: HList](rule: Rule[A, B])(implicit reverse: Reverse.Aux[B, Rev])  { self =>
 
     /**
@@ -91,5 +91,5 @@ trait RuleHListSyntax {
      * @tparam A The type to be validated
      */
     def builder[A]: Rule[A, HNil] = Rule.pass[A].map(_ => HNil)
-  }
+  }*/
 }

@@ -64,7 +64,7 @@ lazy val scalacVersionOptions =
       "-language:implicitConversions",     // Allow definition of implicit functions called views
       "-unchecked",                        // Enable additional warnings where generated code depends on assumptions.
       "-Xcheckinit",                       // Wrap field accessors to throw an exception on uninitialized access.
-      "-Xfatal-warnings",                  // Fail the compilation if there are any warnings.
+//      "-Xfatal-warnings",                  // Fail the compilation if there are any warnings.
       "-Xfuture",                          // Turn on future language features.
       "-Xlint:adapted-args",               // Warn if an argument list is modified to match the receiver.
       "-Xlint:by-name-right-associative",  // By-name parameter of right associative operator.
@@ -92,7 +92,7 @@ lazy val scalacVersionOptions =
       "-Ywarn-nullary-override",           // Warn when non-nullary `def f()' overrides nullary `def f'.
       "-Ywarn-nullary-unit",               // Warn when nullary methods return Unit.
       "-Ywarn-numeric-widen",              // Warn when numerics are widened.
-      "-Ywarn-unused:imports",             // Warn if an import selector is not referenced.
+//      "-Ywarn-unused:imports",             // Warn if an import selector is not referenced.
       "-Ywarn-value-discard"               // Warn when non-Unit expression results are unused.
     ),
     "2.11" -> Seq(

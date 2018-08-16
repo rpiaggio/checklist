@@ -5,5 +5,5 @@ import scala.language.higherKinds
 package object checklist {
   type Messages       = NonEmptyList[Message]
   type Checked[A]     = Messages Ior A
-  type Rule1[A, F[_]] = Rule[A, A, F]
+  type Rule1[F[_], A] = Rule[F, A, A]
 }

@@ -13,7 +13,7 @@ class ReadmeSpec extends FreeSpec with Matchers {
   case class Person(name: String, age: Int, address: Address)
   case class Business(name: String, addresses: List[Address])
 
-  implicit val addressRule: Rule1[Address, Id] =
+  implicit val addressRule: Rule1[Id, Address] =
     Rule.pass[Address]
    /*   .field(_.house)(gte(1))
       .field(_.street)(nonEmpty[String])
@@ -24,13 +24,13 @@ class ReadmeSpec extends FreeSpec with Matchers {
         }
       }*/
 
-  implicit val personRule: Rule1[Person, Id] =
+  implicit val personRule: Rule1[Id, Person] =
     Rule.pass[Person]
      /* .field(_.name)(nonEmpty[String])
       .field(_.age)(gte(1))
       .field(_.address)*/
 
-  implicit val businessRule: Rule1[Business, Id] =
+  implicit val businessRule: Rule1[Id, Business] =
     Rule.pass[Business]
      /* .field(_.name)(nonEmpty[String])
       .field(_.addresses)(sequence(addressRule))*/
