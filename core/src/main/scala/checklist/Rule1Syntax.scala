@@ -1,9 +1,9 @@
 package checklist
 
 import cats.Applicative
-//import monocle._
+import monocle._
 
-//import scala.language.experimental.macros
+import scala.language.experimental.macros
 import scala.language.higherKinds
 
 trait Rule1Syntax {

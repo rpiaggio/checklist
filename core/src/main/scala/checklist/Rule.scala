@@ -400,13 +400,12 @@ trait CollectionRules {
   def mapValue[F[_] : Applicative, A: PathPrefix, B](key: A, messages: Messages): Rule[F, Map[A, B], B] =
     pure(map => Applicative[F].pure(map.get(key).map(Ior.right).getOrElse(Ior.left(messages map (_ prefix key)))))
 
-  /*  def mapValues[A: PathPrefix, B, C, F[_]: Applicative](rule: Rule[F, B, C]): Rule[Map[A, B], Map[A, C], F] =
-      pure { in: Map[A, B] =>
-        in.toList.traverse {
-          case (key, value) =>
-            rule.prefix(key).apply(value).map(key -> _)
-        }
-      } map (_.toMap)*/
+  def mapValues[F[_] : Applicative, A: PathPrefix, B, C](rule: Rule[F, B, C]): Rule[F, Map[A, B], Map[A, C]] =
+    pure[F, Map[A, B], Map[A, C]] { in: Map[A, B] =>
+      in.toList.traverse { case (key, value) =>
+        rule.prefix(key).apply(value).map(_.map(key -> _))
+      }.map(_.sequence).map(_.map(_.toMap))
+    }
 }
 
 /** Type class instances for Rule */
