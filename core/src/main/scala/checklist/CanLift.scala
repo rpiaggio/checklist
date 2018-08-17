@@ -5,7 +5,7 @@ import scala.language.higherKinds
 
 
 trait NaturalTransformationLowPriorityImplicits {
-  implicit def applicativeTransform[C[_[_]], F[_]](implicit evF: C[F], evCF: C[F] <:< Applicative[F]): Id ~> F = new (Id ~> F) {
+  implicit def applicativeTransform[F[_]](implicit evF: Applicative[F]): Id ~> F = new (Id ~> F) {
     override def apply[A](a: Id[A]): F[A] = evF.pure(a)
   }
 }
