@@ -1,6 +1,6 @@
 package checklist
 
-import cats.{Applicative, Id, Monad, Monoid, Traverse}
+import cats.{Applicative, Id, Monad, Monoid, Traverse, ~>}
 import cats.data.{Ior, IorT}
 import cats.implicits._
 import monocle.PLens
@@ -60,15 +60,22 @@ sealed abstract class Rule[F[_] : Applicative, A, B] {
       }).value
     }
 
-  def andThen[C](that: Rule[F, B, C])(implicit ev: Monad[F]): Rule[F, A, C] =
-    Rule.pure[F, A, C](a =>
+  def liftWith[G[_] : Applicative](transform: F ~> G): Rule[G, A, B] = Rule.pure[G, A, B] { in => this (in).liftTo[G](transform) }
+
+  def liftTo[G[_] : Applicative](implicit transform: F ~> G): Rule[G, A, B] = liftWith(transform)
+
+  def andThen[G[_] : Applicative, R[_], C](that: Rule[G, B, C])(implicit /*ev: Monad[F],*/ canLift: CanLift[Monad, F, G, R]): Rule[R, A, C] = {
+    implicit val evMonadR: Monad[R] = canLift.evR
+
+    Rule.pure[R, A, C](a =>
       (for {
-        b <- IorT(this (a))
-        c <- IorT(that(b))
+        b <- IorT(this.liftWith(canLift.liftF).apply(a))
+        c <- IorT(that.liftWith(canLift.liftG).apply(b))
       } yield {
         c
       }).value
     )
+  }
 
   def zip[C](that: Rule[F, A, C]): Rule[F, A, (B, C)] =
     Rule.pure { a =>

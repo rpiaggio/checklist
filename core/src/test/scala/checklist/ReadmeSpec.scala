@@ -31,7 +31,8 @@ class ReadmeSpec extends FreeSpec with Matchers {
     Rule.pass[Person]
       .field(_.name)(nonEmpty[String])
       .field(_.age)(gte(1))
-      .fieldImplicit(_.address)
+      //      .fieldImplicit(_.address)
+      .field(_.address)(addressRule)
 
   implicit val businessRule: Rule1[Id, Business] =
     Rule.pass[Business]
