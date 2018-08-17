@@ -8,7 +8,7 @@ class RuleMacros(val c: blackbox.Context) {
   import c.universe._
 
   def field[F[_], G[_], R[_], A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree)(rule: c.Tree)(evG: c.Tree, canLift: c.Tree): c.Tree = {
-    val q"($param) => $rhs" = accessor
+//    val q"($param) => $rhs" = accessor
     val a = weakTypeOf[A]
     val b = weakTypeOf[B]
     val path = accessorPrefix(accessor)
@@ -16,13 +16,22 @@ class RuleMacros(val c: blackbox.Context) {
     q"${c.prefix}.field($path, $lens)($rule)($evG, $canLift)"
   }
 
-  def fieldImplicit[F[_], G[_], R[_], A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree)(evG: c.Tree, rule: c.Tree, canLift: c.Tree): c.Tree = {
+  /*def fieldImplicit[F[_], G[_], R[_], A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree)(evG: c.Tree, rule: c.Tree, canLift: c.Tree): c.Tree = {
     val q"($param) => $rhs" = accessor
     val a = weakTypeOf[A]
     val b = weakTypeOf[B]
     val path = accessorPrefix(accessor)
     val lens = q"""monocle.macros.GenLens[$a].apply[$b]($accessor)"""
     q"${c.prefix}.fieldImplicit($path, $lens)($evG, $rule, $canLift)"
+  }*/
+
+  def fieldImplicit[F[_], A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree): c.Tree = {
+//    val q"($param) => $rhs" = accessor
+    val a = weakTypeOf[A]
+    val b = weakTypeOf[B]
+    val path = accessorPrefix(accessor)
+    val lens = q"""monocle.macros.GenLens[$a].apply[$b]($accessor)"""
+    q"${c.prefix}.fieldImplicit($path, $lens)"
   }
 
   def fieldWith[F[_], G[_], R[_], A: c.WeakTypeTag, B: c.WeakTypeTag](accessor: c.Tree)(builder: c.Tree)(evG: c.Tree, canLift: c.Tree): c.Tree = {
