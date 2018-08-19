@@ -475,7 +475,7 @@ class CatsRuleSpec extends FreeSpec with Matchers {
   }*/
 }
 
-class Rule1SyntaxSpec extends FreeSpec with Matchers {
+class CheckSyntaxSpec extends FreeSpec with Matchers {
 
   @Lenses case class Coord(x: Int, y: Int)
 
