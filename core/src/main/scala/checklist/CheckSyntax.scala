@@ -1,7 +1,6 @@
 package checklist
 
 import cats.Applicative
-import cats.implicits._
 import monocle._
 
 import scala.language.experimental.macros
