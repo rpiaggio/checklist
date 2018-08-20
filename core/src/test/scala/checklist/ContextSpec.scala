@@ -10,9 +10,10 @@ import monix.execution.Scheduler
 import org.scalatest.{AsyncFreeSpec, Matchers}
 
 import scala.collection.immutable.HashSet
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.Future
 
 class ContextSpec extends AsyncFreeSpec with Matchers {
+  implicit override def executionContext: Scheduler = monix.execution.Scheduler.Implicits.global
 
   val rule1 = Rule.pass[Int]
   val rule2 = rule1.liftTo[Future]
@@ -36,7 +37,7 @@ class ContextSpec extends AsyncFreeSpec with Matchers {
     override def apply[A](f: Future[A]): Task[A] = Task.deferFuture(f)
   }
 
-  def taskToFuture(implicit ec: ExecutionContext, sch: Scheduler): Task ~> Future = new (Task ~> Future) {
+  def taskToFuture: Task ~> Future = new (Task ~> Future) {
     override def apply[A](t: Task[A]): Future[A] = t.runAsync
   }
 
@@ -73,8 +74,6 @@ class ContextSpec extends AsyncFreeSpec with Matchers {
   }
 
   "Task unique email" in {
-    import monix.execution.Scheduler.Implicits.global
-
     val validator = isEmail and isUniqueTask
     validator("newuser@example.com").runAsync map (_ should be(Ior.right("newuser@example.com")))
     validator("user1@example.com").runAsync map (_ should be(Ior.left(errors("Email is already registered"))))
@@ -82,8 +81,6 @@ class ContextSpec extends AsyncFreeSpec with Matchers {
   }
 
   "Id, Future and Task unique non-empty email (as Task)" in {
-    import monix.execution.Scheduler.Implicits.global
-
     implicit val transformation: Future ~> Task = futureToTask
 
     val validator = Rule.nonEmpty[String] and isUniqueTask and isEmailFuture
@@ -94,8 +91,6 @@ class ContextSpec extends AsyncFreeSpec with Matchers {
   }
 
   "Id, Future and Task unique non-empty email (as Future)" in {
-    import monix.execution.Scheduler.Implicits.global
-
     implicit val transformation: Task ~> Future = taskToFuture
 
     val validator = isUniqueTask and isEmailFuture and Rule.nonEmpty[String]
@@ -106,8 +101,6 @@ class ContextSpec extends AsyncFreeSpec with Matchers {
   }
 
   "IO, Future and Task unique non-empty email (as Future)" in {
-    import monix.execution.Scheduler.Implicits.global
-
     implicit val transformation1: Task ~> Future = taskToFuture
     implicit val transformation2: IO ~> Future = ioToFuture
 
